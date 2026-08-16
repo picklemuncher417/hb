@@ -27,7 +27,7 @@ UICorner.Parent = MainFrame
 local Title = Instance.new('TextLabel')
 Title.Size = UDim2.new(1, 0, 0, 30)
 Title.BackgroundTransparency = 1
-Title.Text = 'Hitbox Expander'
+Title.Text = 'AlphasHitboxExpander' -- Updated Title Name
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 16
@@ -106,7 +106,7 @@ RS.RenderStepped:Connect(function()
 
             if Humanoid and Humanoid.Health > 0 then
                 HRP.Size = Vector3.new(size, size, size)
-                HRP.Transparency = 1 -- Completely invisible box
+                HRP.Transparency = 1 
                 HRP.CanCollide = false
                 HRP.Color = Color3.fromRGB(255, 0, 0)
 
@@ -115,7 +115,7 @@ RS.RenderStepped:Connect(function()
                     outline.Name = 'SelectionBox'
                     outline.Parent = HRP
                     outline.Adornee = HRP
-                    outline.LineThickness = 0 -- Completely invisible edge
+                    outline.LineThickness = 0 
                     outline.Visible = false
                     outline.Color3 = Color3.fromRGB(0, 0, 0)
                 else
@@ -136,10 +136,10 @@ RS.RenderStepped:Connect(function()
     end
 end)
 
--- Toggle Menu Visibility
+-- Toggle Menu Visibility (Using the N Key)
 game:GetService('UserInputService').InputBegan:Connect(function(input, processed)
     if processed then return end
-    if input.KeyCode == Enum.KeyCode.RightShift then
+    if input.KeyCode == Enum.KeyCode.N then
         ScreenGui.Enabled = not ScreenGui.Enabled
     end
 end)
