@@ -12,7 +12,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = Client:WaitForChild('PlayerGui')
 
 local MainFrame = Instance.new('Frame')
-MainFrame.Size = UDim2.new(0, 250, 0, 200) -- Expanded height to cleanly fit the toggle button
+MainFrame.Size = UDim2.new(0, 250, 0, 200)
 MainFrame.Position = UDim2.new(0.5, -125, 0.05, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
@@ -36,7 +36,7 @@ Title.TextSize = 16
 Title.Parent = MainFrame
 
 ---------------------------------------------------------
--- ON/OFF TOGGLE BUTTON (NEW)
+-- ON/OFF TOGGLE BUTTON
 ---------------------------------------------------------
 local ToggleButton = Instance.new('TextButton')
 ToggleButton.Size = UDim2.new(1, -20, 0, 25)
@@ -178,21 +178,6 @@ end)
 ---------------------------------------------------------
 -- BUTTON CLICK TOGGLE LOGIC
 ---------------------------------------------------------
-local function resetHitboxes()
-    for _, Player in pairs(Players:GetPlayers()) do
-        if Player ~= Client and Player.Character and Player.Character:FindFirstChild('HumanoidRootPart') then
-            local HRP = Player.Character.HumanoidRootPart
-            HRP.Size = Vector3.new(2, 2, 1)
-            HRP.Transparency = 0
-            
-            local outline = HRP:FindFirstChild('SelectionBox')
-            if outline then
-                outline:Destroy()
-            end
-        end
-    end
-end
-
 ToggleButton.MouseButton1Click:Connect(function()
     hitboxEnabled = not hitboxEnabled
     if hitboxEnabled then
@@ -201,7 +186,6 @@ ToggleButton.MouseButton1Click:Connect(function()
     else
         ToggleButton.Text = 'Hitbox: OFF'
         ToggleButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0) -- Red
-        resetHitboxes() -- Clean up instantly when turned off
     end
 end)
 
@@ -209,8 +193,6 @@ end)
 -- VISUAL UPDATER LOOP
 ---------------------------------------------------------
 RS.RenderStepped:Connect(function()
-    if not hitboxEnabled then return end -- Completely pauses loop updates if turned off
-
     for _, Player in pairs(Players:GetPlayers()) do
         if Player == Client then
             continue
@@ -221,7 +203,13 @@ RS.RenderStepped:Connect(function()
             local Humanoid = Player.Character:FindFirstChild('Humanoid')
 
             if Humanoid and Humanoid.Health > 0 then
-                HRP.Size = Vector3.new(size, size, size)
+                -- Determine size based on button state, transparency always maps to slider
+                if hitboxEnabled then
+                    HRP.Size = Vector3.new(size, size, size)
+                else
+                    HRP.Size = Vector3.new(2, 2, 1)
+                end
+                
                 HRP.Transparency = hitBoxTransparency
                 HRP.CanCollide = false
                 HRP.Color = Color3.fromRGB(255, 0, 0)
