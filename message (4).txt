@@ -3,6 +3,7 @@ local RS = cloneref(game:GetService('RunService'))
 local Client = Players.LocalPlayer
 
 local size = 30
+local hitBoxTransparency = 1 -- Defaults to completely invisible as requested before
 
 local ScreenGui = Instance.new('ScreenGui')
 ScreenGui.Name = 'HitboxExpanderUI'
@@ -10,7 +11,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = Client:WaitForChild('PlayerGui')
 
 local MainFrame = Instance.new('Frame')
-MainFrame.Size = UDim2.new(0, 250, 0, 120)
+MainFrame.Size = UDim2.new(0, 250, 0, 170) -- Expanded height to fit the second slider
 MainFrame.Position = UDim2.new(0.5, -125, 0.05, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
@@ -27,15 +28,18 @@ UICorner.Parent = MainFrame
 local Title = Instance.new('TextLabel')
 Title.Size = UDim2.new(1, 0, 0, 30)
 Title.BackgroundTransparency = 1
-Title.Text = 'AlphasHitboxExpander' -- Updated Title Name
+Title.Text = 'AlphasHitboxExpander'
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 16
 Title.Parent = MainFrame
 
+---------------------------------------------------------
+-- SIZE SLIDER WIDGET
+---------------------------------------------------------
 local SizeLabel = Instance.new('TextLabel')
 SizeLabel.Size = UDim2.new(1, -20, 0, 20)
-SizeLabel.Position = UDim2.new(0, 10, 0, 40)
+SizeLabel.Position = UDim2.new(0, 10, 0, 35)
 SizeLabel.BackgroundTransparency = 1
 SizeLabel.Text = 'Size: ' .. size
 SizeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -45,8 +49,8 @@ SizeLabel.TextXAlignment = Enum.TextXAlignment.Left
 SizeLabel.Parent = MainFrame
 
 local SliderFrame = Instance.new('Frame')
-SliderFrame.Size = UDim2.new(1, -20, 0, 30)
-SliderFrame.Position = UDim2.new(0, 10, 0, 70)
+SliderFrame.Size = UDim2.new(1, -20, 0, 25)
+SliderFrame.Position = UDim2.new(0, 10, 0, 60)
 SliderFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 SliderFrame.BorderSizePixel = 0
 SliderFrame.Parent = MainFrame
@@ -67,21 +71,69 @@ local ButtonCorner = Instance.new('UICorner')
 ButtonCorner.CornerRadius = UDim.new(0, 6)
 ButtonCorner.Parent = SliderButton
 
-local dragging = true
+---------------------------------------------------------
+-- TRANSPARENCY SLIDER WIDGET (NEW)
+---------------------------------------------------------
+local TransLabel = Instance.new('TextLabel')
+TransLabel.Size = UDim2.new(1, -20, 0, 20)
+TransLabel.Position = UDim2.new(0, 10, 0, 95)
+TransLabel.BackgroundTransparency = 1
+TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
+TransLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+TransLabel.Font = Enum.Font.Gotham
+TransLabel.TextSize = 14
+TransLabel.TextXAlignment = Enum.TextXAlignment.Left
+TransLabel.Parent = MainFrame
+
+local TransSliderFrame = Instance.new('Frame')
+TransSliderFrame.Size = UDim2.new(1, -20, 0, 25)
+TransSliderFrame.Position = UDim2.new(0, 10, 0, 120)
+TransSliderFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TransSliderFrame.BorderSizePixel = 0
+TransSliderFrame.Parent = MainFrame
+
+local TransSliderCorner = Instance.new('UICorner')
+TransSliderCorner.CornerRadius = UDim.new(0, 6)
+TransSliderCorner.Parent = TransSliderFrame
+
+local TransSliderButton = Instance.new('TextButton')
+TransSliderButton.Size = UDim2.new(0, 40, 1, 0)
+TransSliderButton.Position = UDim2.new(hitBoxTransparency, -20, 0, 0)
+TransSliderButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+TransSliderButton.BorderSizePixel = 0
+TransSliderButton.Text = ''
+TransSliderButton.Parent = TransSliderFrame
+
+local TransButtonCorner = Instance.new('UICorner')
+TransButtonCorner.CornerRadius = UDim.new(0, 6)
+TransButtonCorner.Parent = TransSliderButton
+
+---------------------------------------------------------
+-- SLIDER LOGIC TRACKING
+---------------------------------------------------------
+local draggingSize = false
+local draggingTrans = false
 
 SliderButton.MouseButton1Down:Connect(function()
-    dragging = true
+    draggingSize = true
+end)
+
+TransSliderButton.MouseButton1Down:Connect(function()
+    draggingTrans = true
 end)
 
 game:GetService('UserInputService').InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
+        draggingSize = false
+        draggingTrans = false
     end
 end)
 
 RS.RenderStepped:Connect(function()
-    if dragging then
-        local mouse = Client:GetMouse()
+    local mouse = Client:GetMouse()
+    
+    -- Handle Size Slider Dragging
+    if draggingSize then
         local relativeX = math.clamp(
             mouse.X - SliderFrame.AbsolutePosition.X,
             0,
@@ -92,8 +144,24 @@ RS.RenderStepped:Connect(function()
         SliderButton.Position = UDim2.new(percentage, -20, 0, 0)
         SizeLabel.Text = 'Size: ' .. size
     end
+    
+    -- Handle Transparency Slider Dragging
+    if draggingTrans then
+        local relativeX = math.clamp(
+            mouse.X - TransSliderFrame.AbsolutePosition.X,
+            0,
+            TransSliderFrame.AbsoluteSize.X
+        )
+        local percentage = relativeX / TransSliderFrame.AbsoluteSize.X
+        hitBoxTransparency = percentage
+        TransSliderButton.Position = UDim2.new(percentage, -20, 0, 0)
+        TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
+    end
 end)
 
+---------------------------------------------------------
+-- VISUAL UPDATER LOOP
+---------------------------------------------------------
 RS.RenderStepped:Connect(function()
     for _, Player in pairs(Players:GetPlayers()) do
         if Player == Client then
@@ -106,22 +174,26 @@ RS.RenderStepped:Connect(function()
 
             if Humanoid and Humanoid.Health > 0 then
                 HRP.Size = Vector3.new(size, size, size)
-                HRP.Transparency = 1 
+                HRP.Transparency = hitBoxTransparency -- Directly tied to transparency slider
                 HRP.CanCollide = false
                 HRP.Color = Color3.fromRGB(255, 0, 0)
+
+                -- Control edge lines visibility dynamically using the slider percentage
+                local lineThickness = (1 - hitBoxTransparency) * 0.08
+                local areLinesVisible = hitBoxTransparency < 1
 
                 if not HRP:FindFirstChild('SelectionBox') then
                     local outline = Instance.new('SelectionBox')
                     outline.Name = 'SelectionBox'
                     outline.Parent = HRP
                     outline.Adornee = HRP
-                    outline.LineThickness = 0 
-                    outline.Visible = false
+                    outline.LineThickness = lineThickness
+                    outline.Visible = areLinesVisible
                     outline.Color3 = Color3.fromRGB(0, 0, 0)
                 else
                     local outline = HRP:FindFirstChild('SelectionBox')
-                    outline.LineThickness = 0
-                    outline.Visible = false
+                    outline.LineThickness = lineThickness
+                    outline.Visible = areLinesVisible
                 end
             else
                 HRP.Size = Vector3.new(2, 2, 1)
