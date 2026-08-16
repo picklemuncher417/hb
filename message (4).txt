@@ -135,3 +135,11 @@ RS.RenderStepped:Connect(function()
         end
     end
 end)
+
+-- Toggle Menu Visibility
+game:GetService('UserInputService').InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        ScreenGui.Enabled = not ScreenGui.Enabled
+    end
+end)
