@@ -67,7 +67,7 @@ local ButtonCorner = Instance.new('UICorner')
 ButtonCorner.CornerRadius = UDim.new(0, 6)
 ButtonCorner.Parent = SliderButton
 
-local dragging = false
+local dragging = true
 
 SliderButton.MouseButton1Down:Connect(function()
     dragging = true
@@ -106,7 +106,7 @@ RS.RenderStepped:Connect(function()
 
             if Humanoid and Humanoid.Health > 0 then
                 HRP.Size = Vector3.new(size, size, size)
-                HRP.Transparency = 0.8 -- More see-through
+                HRP.Transparency = 0 -- More see-through
                 HRP.CanCollide = false
                 HRP.Color = Color3.fromRGB(255, 0, 0)
 
@@ -115,12 +115,12 @@ RS.RenderStepped:Connect(function()
                     outline.Name = 'SelectionBox'
                     outline.Parent = HRP
                     outline.Adornee = HRP
-                    outline.LineThickness = 0.05
+                    outline.LineThickness = 0
                     outline.Color3 = Color3.fromRGB(0, 0, 0)
                 end
             else
                 HRP.Size = Vector3.new(2, 2, 1)
-                HRP.Transparency = 1
+                HRP.Transparency = 0
 
                 local outline = HRP:FindFirstChild('SelectionBox')
                 if outline then
