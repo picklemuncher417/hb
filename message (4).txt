@@ -16,6 +16,10 @@ MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
+-- Makes the UI movable
+local DragDetector = Instance.new('UIDragDetector')
+DragDetector.Parent = MainFrame
+
 local UICorner = Instance.new('UICorner')
 UICorner.CornerRadius = UDim.new(0, 8)
 UICorner.Parent = MainFrame
