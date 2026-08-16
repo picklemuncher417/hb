@@ -3,7 +3,8 @@ local RS = cloneref(game:GetService('RunService'))
 local Client = Players.LocalPlayer
 
 local size = 30
-local hitBoxTransparency = 1 -- Defaults to completely invisible as requested before
+local hitBoxTransparency = 1 
+local hitboxEnabled = true -- Hitbox state tracking variable
 
 local ScreenGui = Instance.new('ScreenGui')
 ScreenGui.Name = 'HitboxExpanderUI'
@@ -11,7 +12,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = Client:WaitForChild('PlayerGui')
 
 local MainFrame = Instance.new('Frame')
-MainFrame.Size = UDim2.new(0, 250, 0, 170) -- Expanded height to fit the second slider
+MainFrame.Size = UDim2.new(0, 250, 0, 200) -- Expanded height to cleanly fit the toggle button
 MainFrame.Position = UDim2.new(0.5, -125, 0.05, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
@@ -35,11 +36,28 @@ Title.TextSize = 16
 Title.Parent = MainFrame
 
 ---------------------------------------------------------
+-- ON/OFF TOGGLE BUTTON (NEW)
+---------------------------------------------------------
+local ToggleButton = Instance.new('TextButton')
+ToggleButton.Size = UDim2.new(1, -20, 0, 25)
+ToggleButton.Position = UDim2.new(0, 10, 0, 35)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100) -- Green when active
+ToggleButton.Text = 'Hitbox: ON'
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 12
+ToggleButton.Parent = MainFrame
+
+local ToggleCorner = Instance.new('UICorner')
+ToggleCorner.CornerRadius = UDim.new(0, 6)
+ToggleCorner.Parent = ToggleButton
+
+---------------------------------------------------------
 -- SIZE SLIDER WIDGET
 ---------------------------------------------------------
 local SizeLabel = Instance.new('TextLabel')
 SizeLabel.Size = UDim2.new(1, -20, 0, 20)
-SizeLabel.Position = UDim2.new(0, 10, 0, 35)
+SizeLabel.Position = UDim2.new(0, 10, 0, 65)
 SizeLabel.BackgroundTransparency = 1
 SizeLabel.Text = 'Size: ' .. size
 SizeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -50,7 +68,7 @@ SizeLabel.Parent = MainFrame
 
 local SliderFrame = Instance.new('Frame')
 SliderFrame.Size = UDim2.new(1, -20, 0, 25)
-SliderFrame.Position = UDim2.new(0, 10, 0, 60)
+SliderFrame.Position = UDim2.new(0, 10, 0, 90)
 SliderFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 SliderFrame.BorderSizePixel = 0
 SliderFrame.Parent = MainFrame
@@ -72,11 +90,11 @@ ButtonCorner.CornerRadius = UDim.new(0, 6)
 ButtonCorner.Parent = SliderButton
 
 ---------------------------------------------------------
--- TRANSPARENCY SLIDER WIDGET (NEW)
+-- TRANSPARENCY SLIDER WIDGET
 ---------------------------------------------------------
 local TransLabel = Instance.new('TextLabel')
 TransLabel.Size = UDim2.new(1, -20, 0, 20)
-TransLabel.Position = UDim2.new(0, 10, 0, 95)
+TransLabel.Position = UDim2.new(0, 10, 0, 125)
 TransLabel.BackgroundTransparency = 1
 TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
 TransLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -87,7 +105,7 @@ TransLabel.Parent = MainFrame
 
 local TransSliderFrame = Instance.new('Frame')
 TransSliderFrame.Size = UDim2.new(1, -20, 0, 25)
-TransSliderFrame.Position = UDim2.new(0, 10, 0, 120)
+TransSliderFrame.Position = UDim2.new(0, 10, 0, 150)
 TransSliderFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 TransSliderFrame.BorderSizePixel = 0
 TransSliderFrame.Parent = MainFrame
@@ -132,7 +150,6 @@ end)
 RS.RenderStepped:Connect(function()
     local mouse = Client:GetMouse()
     
-    -- Handle Size Slider Dragging
     if draggingSize then
         local relativeX = math.clamp(
             mouse.X - SliderFrame.AbsolutePosition.X,
@@ -145,7 +162,6 @@ RS.RenderStepped:Connect(function()
         SizeLabel.Text = 'Size: ' .. size
     end
     
-    -- Handle Transparency Slider Dragging
     if draggingTrans then
         local relativeX = math.clamp(
             mouse.X - TransSliderFrame.AbsolutePosition.X,
@@ -160,9 +176,41 @@ RS.RenderStepped:Connect(function()
 end)
 
 ---------------------------------------------------------
+-- BUTTON CLICK TOGGLE LOGIC
+---------------------------------------------------------
+local function resetHitboxes()
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player ~= Client and Player.Character and Player.Character:FindFirstChild('HumanoidRootPart') then
+            local HRP = Player.Character.HumanoidRootPart
+            HRP.Size = Vector3.new(2, 2, 1)
+            HRP.Transparency = 0
+            
+            local outline = HRP:FindFirstChild('SelectionBox')
+            if outline then
+                outline:Destroy()
+            end
+        end
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    hitboxEnabled = not hitboxEnabled
+    if hitboxEnabled then
+        ToggleButton.Text = 'Hitbox: ON'
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100) -- Green
+    else
+        ToggleButton.Text = 'Hitbox: OFF'
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0) -- Red
+        resetHitboxes() -- Clean up instantly when turned off
+    end
+end)
+
+---------------------------------------------------------
 -- VISUAL UPDATER LOOP
 ---------------------------------------------------------
 RS.RenderStepped:Connect(function()
+    if not hitboxEnabled then return end -- Completely pauses loop updates if turned off
+
     for _, Player in pairs(Players:GetPlayers()) do
         if Player == Client then
             continue
@@ -174,11 +222,10 @@ RS.RenderStepped:Connect(function()
 
             if Humanoid and Humanoid.Health > 0 then
                 HRP.Size = Vector3.new(size, size, size)
-                HRP.Transparency = hitBoxTransparency -- Directly tied to transparency slider
+                HRP.Transparency = hitBoxTransparency
                 HRP.CanCollide = false
                 HRP.Color = Color3.fromRGB(255, 0, 0)
 
-                -- Control edge lines visibility dynamically using the slider percentage
                 local lineThickness = (1 - hitBoxTransparency) * 0.08
                 local areLinesVisible = hitBoxTransparency < 1
 
