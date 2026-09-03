@@ -369,10 +369,13 @@ task.spawn(function()
                     
                     local maxHealth = Humanoid.MaxHealth
                     local currentHealth = Humanoid.Health
+                    local healthPercentage = currentHealth / maxHealth
                     
+                    -- Cooldown trigger handling based on your 2 HP and 40% rules
                     if currentHealth <= 2 then
                         coolingDown[Player.UserId] = true
-                    elseif currentHealth >= maxHealth then
+                    elseif healthPercentage >= 0.40 then
+                        -- Instantly clear recovery freeze when health meets or exceeds 40%
                         coolingDown[Player.UserId] = nil
                     end
                     
@@ -403,12 +406,18 @@ task.spawn(function()
                         outline.LineThickness = lineThickness
                         outline.Visible = areLinesVisible
                     else
-                        -- Secure layout fix for low health / downed character states
+                        -- Instead of 0,0,0 sizing, moves the hitbox 10 studs down smoothly
+                        -- Keeps size at 2,2,1 so rigging never snaps or freezes in mid-air
                         HRP.Size = Vector3.new(2, 2, 1)
                         HRP.Transparency = 1
                         HRP.CanCollide = false
                         HRP.CanTouch = false
                         HRP.Massless = true
+                        
+                        -- Shifts alignment offset downward away from world raycasts safely
+                        pcall(function()
+                            HRP.CFrame = HRP.CFrame * CFrame.new(0, -10, 0)
+                        end)
                         
                         local outline = HRP:FindFirstChild('SelectionBox')
                         if outline then
