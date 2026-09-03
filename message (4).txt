@@ -1,3 +1,6 @@
+-- Safe Environment Fallback Check (Fixes the line 1 nil crash)
+local cloneref = cloneref or function(obj) return obj end
+
 local Players = cloneref(game:GetService('Players'))
 local RS = cloneref(game:GetService('RunService'))
 local Client = Players.LocalPlayer
@@ -263,47 +266,49 @@ RS.RenderStepped:Connect(function()
 
                 -- Trigger cooling down if health hits 2 or below
                 if currentHealth <= 2 then
+                if currentHealth <= 2 then
                     coolingDown[Player.UserId] = true
                 elseif currentHealth >= maxHealth then
-                coolingDown[Player.UserId] = nil
-            end
-
-            -- Only expand if above 2 HP AND fully out of the cooldown phase
-            if currentHealth > 2 and not coolingDown[Player.UserId] then
-                if hitboxEnabled then
-                    HRP.Size = Vector3.new(sizeX, sizeY, sizeZ)
-                else
-                    HRP.Size = Vector3.new(2, 2, 1)
+                    coolingDown[Player.UserId] = nil
                 end
-                
-                HRP.Transparency = hitBoxTransparency
-                HRP.CanCollide = false
-                HRP.Color = Color3.fromRGB(255, 0, 0)
 
-                local lineThickness = (1 - hitBoxTransparency) * 0.08
-                local areLinesVisible = hitBoxTransparency < 1
+                -- Only expand if above 2 HP AND fully out of the cooldown phase
+                if currentHealth > 2 and not coolingDown[Player.UserId] then
+                    if hitboxEnabled then
+                        HRP.Size = Vector3.new(sizeX, sizeY, sizeZ)
+                    else
+                        HRP.Size = Vector3.new(2, 2, 1)
+                    end
+                    
+                    HRP.Transparency = hitBoxTransparency
+                    HRP.CanCollide = false
+                    HRP.Color = Color3.fromRGB(255, 0, 0)
 
-                if not HRP:FindFirstChild('SelectionBox') then
-                    local outline = Instance.new('SelectionBox')
-                    outline.Name = 'SelectionBox'
-                    outline.Parent = HRP
-                    outline.Adornee = HRP
-                    outline.LineThickness = lineThickness
-                    outline.Visible = areLinesVisible
-                    outline.Color3 = Color3.fromRGB(0, 0, 0)
+                    local lineThickness = (1 - hitBoxTransparency) * 0.08
+                    local areLinesVisible = hitBoxTransparency < 1
+
+                    if not HRP:FindFirstChild('SelectionBox') then
+                        local outline = Instance.new('SelectionBox')
+                        outline.Name = 'SelectionBox'
+                        outline.Parent = HRP
+                        outline.Adornee = HRP
+                        outline.LineThickness = lineThickness
+                        outline.Visible = areLinesVisible
+                        outline.Color3 = Color3.fromRGB(0, 0, 0)
+                    else
+                        local outline = HRP:FindFirstChild('SelectionBox')
+                        outline.LineThickness = lineThickness
+                        outline.Visible = areLinesVisible
+                    end
                 else
+                    -- Hitboxes collapse down to absolute zero (nothing) if 2 HP or below
+                    HRP.Size = Vector3.new(0, 0, 0)
+                    HRP.Transparency = 1 
+
                     local outline = HRP:FindFirstChild('SelectionBox')
-                    outline.LineThickness = lineThickness
-                    outline.Visible = areLinesVisible
-                end
-            else
-                -- Hitboxes collapse down to absolute zero (nothing) if 2 HP or below
-                HRP.Size = Vector3.new(0, 0, 0)
-                HRP.Transparency = 1 
-
-                local outline = HRP:FindFirstChild('SelectionBox')
-                if outline then
-                    outline:Destroy()
+                    if outline then
+                        outline:Destroy()
+                    end
                 end
             end
         end
