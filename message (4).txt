@@ -1,4 +1,4 @@
--- Safe Environment Fallback Check (Prevents Line 1 Null Execution Crashes)
+-- Safe Environment Fallback Check
 local cloneref = cloneref or function(obj) return obj end
 
 local Players = cloneref(game:GetService('Players'))
@@ -6,7 +6,7 @@ local RS = cloneref(game:GetService('RunService'))
 local Lighting = cloneref(game:GetService('Lighting'))
 local Client = Players.LocalPlayer
 
--- Default XYZ sizing configuration parameters (Allows units down to 1)
+-- Default XYZ sizing configuration parameters
 local sizeX = 5
 local sizeY = 5
 local sizeZ = 5
@@ -15,8 +15,8 @@ local hitboxEnabled = true
 local superOptimize = false
 local potatoGfxEnabled = false 
 
--- Persistent memory structures to track down states and health thresholds safely
-local recoveringPlayers = {} 
+-- Tables to track backend state memory data structures safely
+local coolingDown = {}
 
 local ScreenGui = Instance.new('ScreenGui')
 ScreenGui.Name = 'HitboxExpanderUI'
@@ -268,6 +268,7 @@ RS.RenderStepped:Connect(function()
         LabelZ.Text = 'Size Z: ' .. sizeZ
     end
     if dragTrans then
+        local pct = math.clamp(mouse.X - TransSliderFrame.AbsolutePosition.X, 0, TransSliderFrame.AbsoluteSize.X) / TransSliderFrame.AbsoluteSize.X
         hitBoxTransparency = pct
         TransSliderButton.Position = UDim2.new(pct, -20, 0, 0)
         TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
@@ -304,6 +305,7 @@ GfxButton.MouseButton1Click:Connect(function()
         GfxButton.Text = 'Lower GFX: ON'
         GfxButton.BackgroundColor3 = Color3.fromRGB(200, 120, 0)
         GfxButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        
         Lighting.GlobalShadows = false
         Lighting.FogStart = 0
         Lighting.FogEnd = 999999
@@ -319,8 +321,8 @@ GfxButton.MouseButton1Click:Connect(function()
         GfxButton.Text = 'Lower GFX: OFF'
         GfxButton.BackgroundColor3 = Color3.fromRGB(70, 70, 75)
         GfxButton.TextColor3 = Color3.fromRGB(180, 180, 180)
-        Lighting.GlobalShadows = true
         
+        Lighting.GlobalShadows = true
         local terrain = workspace:FindFirstChildOfClass("Terrain")
         if terrain then
             terrain.WaterWaveSize = 0.15
@@ -369,16 +371,15 @@ task.spawn(function()
                     local currentHealth = Humanoid.Health
                     local healthPercentage = currentHealth / maxHealth
                     
-                    -- Cooldown trigger handling based on 2 HP and 40% health percentage rules
+                    -- Cooldown trigger handling based on your 2 HP and 40% rules
                     if currentHealth <= 2 then
-                        recoveringPlayers[Player.UserId] = true
+                        coolingDown[Player.UserId] = true
                     elseif healthPercentage >= 0.40 then
-                        -- Instantly clear recovery phase when health meets or exceeds 40%
-                        recoveringPlayers[Player.UserId] = nil
+                        -- Instantly clear recovery freeze when health meets or exceeds 40%
+                        coolingDown[Player.UserId] = nil
                     end
                     
-                    -- Only scales back up if above 2 HP AND completely out of the recovering state
-                    if currentHealth > 2 and not recoveringPlayers[Player.UserId] then
+                    if currentHealth > 2 and not coolingDown[Player.UserId] then
                         if hitboxEnabled then
                             HRP.Size = Vector3.new(sizeX, sizeY, sizeZ)
                         else
@@ -405,12 +406,18 @@ task.spawn(function()
                         outline.LineThickness = lineThickness
                         outline.Visible = areLinesVisible
                     else
-                        -- Drops down to a stable 1,1,1 layout directly on the player axis when below the threshold
-                        HRP.Size = Vector3.new(1, 1, 1)
+                        -- Instead of 0,0,0 sizing, moves the hitbox 10 studs down smoothly
+                        -- Keeps size at 2,2,1 so rigging never snaps or freezes in mid-air
+                        HRP.Size = Vector3.new(2, 2, 1)
                         HRP.Transparency = 1
                         HRP.CanCollide = false
                         HRP.CanTouch = false
                         HRP.Massless = true
+                        
+                        -- Shifts alignment offset downward away from world raycasts safely
+                        pcall(function()
+                            HRP.CFrame = HRP.CFrame * CFrame.new(0, -10, 0)
+                        end)
                         
                         local outline = HRP:FindFirstChild('SelectionBox')
                         if outline then
