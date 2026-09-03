@@ -214,7 +214,7 @@ OptCorner.CornerRadius = UDim.new(0, 6)
 OptCorner.Parent = OptButton
 
 ---------------------------------------------------------
--- POTATO GRAPHICS ROW TOGGLE SWITCH (STABLE METHOD)
+-- POTATO GRAPHICS ROW TOGGLE SWITCH
 ---------------------------------------------------------
 local GfxButton = Instance.new('TextButton')
 GfxButton.Size = UDim2.new(1, -20, 0, 25)
@@ -299,9 +299,6 @@ OptButton.MouseButton1Click:Connect(function()
     end
 end)
 
----------------------------------------------------------
--- POTATO MODE EXECUTION FUNCTIONALITY (LAG-FREE METHOD)
----------------------------------------------------------
 GfxButton.MouseButton1Click:Connect(function()
     potatoGfxEnabled = not potatoGfxEnabled
     if potatoGfxEnabled then
@@ -309,8 +306,6 @@ GfxButton.MouseButton1Click:Connect(function()
         GfxButton.BackgroundColor3 = Color3.fromRGB(200, 120, 0)
         GfxButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         
-        -- Safely bypasses material looping by updating Global Lighting parameters
-        -- This disables heavy visual elements instantly across the map without performance loss
         Lighting.GlobalShadows = false
         Lighting.FogStart = 0
         Lighting.FogEnd = 999999
@@ -327,9 +322,7 @@ GfxButton.MouseButton1Click:Connect(function()
         GfxButton.BackgroundColor3 = Color3.fromRGB(70, 70, 75)
         GfxButton.TextColor3 = Color3.fromRGB(180, 180, 180)
         
-        -- Restores standard Lighting properties back to normal maps
         Lighting.GlobalShadows = true
-        
         local terrain = workspace:FindFirstChildOfClass("Terrain")
         if terrain then
             terrain.WaterWaveSize = 0.15
@@ -341,7 +334,7 @@ GfxButton.MouseButton1Click:Connect(function()
 end)
 
 ---------------------------------------------------------
--- ADVANCED DYNAMIC OPTIMIZATION BACKEND ENGINE
+-- BACKEND EXECUTOR LOGIC WHEEL
 ---------------------------------------------------------
 task.spawn(function()
     local baseSleep = 0.03
@@ -392,6 +385,8 @@ task.spawn(function()
                         
                         HRP.Transparency = hitBoxTransparency
                         HRP.CanCollide = false
+                        HRP.CanTouch = true
+                        HRP.Massless = false
                         HRP.Color = Color3.fromRGB(255, 0, 0)
                         
                         local lineThickness = (1 - hitBoxTransparency) * 0.08
@@ -408,8 +403,12 @@ task.spawn(function()
                         outline.LineThickness = lineThickness
                         outline.Visible = areLinesVisible
                     else
-                        HRP.Size = Vector3.new(0, 0, 0)
+                        -- Secure layout fix for low health / downed character states
+                        HRP.Size = Vector3.new(2, 2, 1)
                         HRP.Transparency = 1
+                        HRP.CanCollide = false
+                        HRP.CanTouch = false
+                        HRP.Massless = true
                         
                         local outline = HRP:FindFirstChild('SelectionBox')
                         if outline then
