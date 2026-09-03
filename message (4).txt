@@ -15,6 +15,9 @@ local hitboxEnabled = true
 local superOptimize = false
 local potatoGfxEnabled = false 
 
+-- Persistent memory structures to track down states and health thresholds safely
+local recoveringPlayers = {} 
+
 local ScreenGui = Instance.new('ScreenGui')
 ScreenGui.Name = 'HitboxExpanderUI'
 ScreenGui.ResetOnSpawn = false
@@ -265,7 +268,6 @@ RS.RenderStepped:Connect(function()
         LabelZ.Text = 'Size Z: ' .. sizeZ
     end
     if dragTrans then
-        local pct = math.clamp(mouse.X - TransSliderFrame.AbsolutePosition.X, 0, TransSliderFrame.AbsoluteSize.X) / TransSliderFrame.AbsoluteSize.X
         hitBoxTransparency = pct
         TransSliderButton.Position = UDim2.new(pct, -20, 0, 0)
         TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
@@ -363,10 +365,20 @@ task.spawn(function()
                         end
                     end
                     
+                    local maxHealth = Humanoid.MaxHealth
                     local currentHealth = Humanoid.Health
+                    local healthPercentage = currentHealth / maxHealth
                     
-                    -- Pure target check (If above 2 HP, standard scaling runs seamlessly)
-                    if currentHealth > 2 then
+                    -- Cooldown trigger handling based on 2 HP and 40% health percentage rules
+                    if currentHealth <= 2 then
+                        recoveringPlayers[Player.UserId] = true
+                    elseif healthPercentage >= 0.40 then
+                        -- Instantly clear recovery phase when health meets or exceeds 40%
+                        recoveringPlayers[Player.UserId] = nil
+                    end
+                    
+                    -- Only scales back up if above 2 HP AND completely out of the recovering state
+                    if currentHealth > 2 and not recoveringPlayers[Player.UserId] then
                         if hitboxEnabled then
                             HRP.Size = Vector3.new(sizeX, sizeY, sizeZ)
                         else
@@ -393,8 +405,8 @@ task.spawn(function()
                         outline.LineThickness = lineThickness
                         outline.Visible = areLinesVisible
                     else
-                        -- Shrinks cleanly directly on the player axis down to 0.1 dimensions when at 2 HP or lower
-                        HRP.Size = Vector3.new(0.1, 0.1, 0.1)
+                        -- Drops down to a stable 1,1,1 layout directly on the player axis when below the threshold
+                        HRP.Size = Vector3.new(1, 1, 1)
                         HRP.Transparency = 1
                         HRP.CanCollide = false
                         HRP.CanTouch = false
