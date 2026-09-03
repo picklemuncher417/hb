@@ -1,11 +1,8 @@
--- Safe Environment Fallback Check (Fixes the line 1 nil crash)
-local cloneref = cloneref or function(obj) return obj end
-
 local Players = cloneref(game:GetService('Players'))
 local RS = cloneref(game:GetService('RunService'))
 local Client = Players.LocalPlayer
 
--- Default XYZ sizing configuration parameters
+-- Default XYZ sizing parameters
 local sizeX = 5
 local sizeY = 5
 local sizeZ = 5
@@ -16,45 +13,57 @@ local hitboxEnabled = true
 local coolingDown = {}
 
 local ScreenGui = Instance.new('ScreenGui')
-ScreenGui.Name = 'HitboxExpanderUI'
+ScreenGui.Name = 'AlphasHitboxExpanderUI'
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = Client:WaitForChild('PlayerGui')
 
+---------------------------------------------------------
+-- CORE CONTAINER FRAME (MODERNIZED DIMENSIONS)
+---------------------------------------------------------
 local MainFrame = Instance.new('Frame')
-MainFrame.Size = UDim2.new(0, 250, 0, 310) 
-MainFrame.Position = UDim2.new(0.5, -125, 0.05, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MainFrame.Size = UDim2.new(0, 240, 0, 310) 
+MainFrame.Position = UDim2.new(0.5, -120, 0.15, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 22) -- Slate dark background
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
--- Makes the UI movable
 local DragDetector = Instance.new('UIDragDetector')
 DragDetector.Parent = MainFrame
 
-local UICorner = Instance.new('UICorner')
-UICorner.CornerRadius = UDim.new(0, 8)
-UICorner.Parent = MainFrame
+local MainCorner = Instance.new('UICorner')
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
+
+-- Premium Accent Underline
+local AccentLine = Instance.new('Frame')
+AccentLine.Size = UDim2.new(1, 0, 0, 2)
+AccentLine.Position = UDim2.new(0, 0, 0, 32)
+AccentLine.BackgroundColor3 = Color3.fromRGB(0, 170, 100) -- Clean emerald green theme
+AccentLine.BorderSizePixel = 0
+AccentLine.Parent = MainFrame
 
 local Title = Instance.new('TextLabel')
-Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Size = UDim2.new(1, -20, 0, 32)
+Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = 'AlphasHitboxExpander'
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Text = 'ALPHA EXPANDER'
+Title.TextColor3 = Color3.fromRGB(240, 240, 245)
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 16
+Title.TextSize = 13
+Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = MainFrame
 
 ---------------------------------------------------------
--- MASTER TOGGLE INTERFACE ELEMENT
+-- PREMIUM ACTIVE SWITCH
 ---------------------------------------------------------
 local ToggleButton = Instance.new('TextButton')
-ToggleButton.Size = UDim2.new(1, -20, 0, 25)
-ToggleButton.Position = UDim2.new(0, 10, 0, 35)
+ToggleButton.Size = UDim2.new(1, -20, 0, 26)
+ToggleButton.Position = UDim2.new(0, 10, 0, 44)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
-ToggleButton.Text = 'Hitbox: ON'
+ToggleButton.Text = 'Status: Active'
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.Font = Enum.Font.GothamBold
-ToggleButton.TextSize = 12
+ToggleButton.TextSize = 11
 ToggleButton.Parent = MainFrame
 
 local ToggleCorner = Instance.new('UICorner')
@@ -62,139 +71,153 @@ ToggleCorner.CornerRadius = UDim.new(0, 6)
 ToggleCorner.Parent = ToggleButton
 
 ---------------------------------------------------------
--- X-AXIS CONTROLLERS
+-- X-AXIS MODULAR WIDGET
 ---------------------------------------------------------
 local LabelX = Instance.new('TextLabel')
 LabelX.Size = UDim2.new(1, -20, 0, 15)
-LabelX.Position = UDim2.new(0, 10, 0, 65)
+LabelX.Position = UDim2.new(0, 10, 0, 80)
 LabelX.BackgroundTransparency = 1
-LabelX.Text = 'Size X: ' .. sizeX
-LabelX.TextColor3 = Color3.fromRGB(200, 200, 200)
-LabelX.Font = Enum.Font.Gotham
-LabelX.TextSize = 14
+LabelX.Text = 'Width (X): ' .. sizeX
+LabelX.TextColor3 = Color3.fromRGB(150, 150, 155)
+LabelX.Font = Enum.Font.GothamMedium
+LabelX.TextSize = 11
 LabelX.TextXAlignment = Enum.TextXAlignment.Left
 LabelX.Parent = MainFrame
 
 local FrameX = Instance.new('Frame')
-FrameX.Size = UDim2.new(1, -20, 0, 20)
-FrameX.Position = UDim2.new(0, 10, 0, 80)
-FrameX.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FrameX.Size = UDim2.new(1, -20, 0, 6)
+FrameX.Position = UDim2.new(0, 10, 0, 100)
+FrameX.BackgroundColor3 = Color3.fromRGB(40, 40, 45) -- Cleaner, thinner bar tracks
 FrameX.BorderSizePixel = 0
 FrameX.Parent = MainFrame
 
-Instance.new('UICorner', FrameX).CornerRadius = UDim.new(0, 6)
+Instance.new('UICorner', FrameX).CornerRadius = UDim.new(0, 3)
 
 local ButtonX = Instance.new('TextButton')
-ButtonX.Size = UDim2.new(0, 40, 1, 0)
-ButtonX.Position = UDim2.new((sizeX - 1) / 99, -20, 0, 0)
-ButtonX.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ButtonX.Size = UDim2.new(0, 20, 0, 20) -- Ultra-sleek box handles
+ButtonX.Position = UDim2.new((sizeX - 1) / 99, -10, 0.5, -10)
+ButtonX.BackgroundColor3 = Color3.fromRGB(230, 230, 235)
 ButtonX.BorderSizePixel = 0
 ButtonX.Text = ''
 ButtonX.Parent = FrameX
 
-Instance.new('UICorner', ButtonX).CornerRadius = UDim.new(0, 6)
+Instance.new('UICorner', ButtonX).CornerRadius = UDim.new(0, 5)
 
 ---------------------------------------------------------
--- Y-AXIS CONTROLLERS
+-- Y-AXIS MODULAR WIDGET
 ---------------------------------------------------------
 local LabelY = Instance.new('TextLabel')
 LabelY.Size = UDim2.new(1, -20, 0, 15)
-LabelY.Position = UDim2.new(0, 10, 0, 110)
+LabelY.Position = UDim2.new(0, 10, 0, 130)
 LabelY.BackgroundTransparency = 1
-LabelY.Text = 'Size Y: ' .. sizeY
-LabelY.TextColor3 = Color3.fromRGB(200, 200, 200)
-LabelY.Font = Enum.Font.Gotham
-LabelY.TextSize = 14
+LabelY.Text = 'Height (Y): ' .. sizeY
+LabelY.TextColor3 = Color3.fromRGB(150, 150, 155)
+LabelY.Font = Enum.Font.GothamMedium
+LabelY.TextSize = 11
 LabelY.TextXAlignment = Enum.TextXAlignment.Left
 LabelY.Parent = MainFrame
 
 local FrameY = Instance.new('Frame')
-FrameY.Size = UDim2.new(1, -20, 0, 20)
-FrameY.Position = UDim2.new(0, 10, 0, 125)
-FrameY.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FrameY.Size = UDim2.new(1, -20, 0, 6)
+FrameY.Position = UDim2.new(0, 10, 0, 150)
+FrameY.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 FrameY.BorderSizePixel = 0
 FrameY.Parent = MainFrame
 
-Instance.new('UICorner', FrameY).CornerRadius = UDim.new(0, 6)
+Instance.new('UICorner', FrameY).CornerRadius = UDim.new(0, 3)
 
 local ButtonY = Instance.new('TextButton')
-ButtonY.Size = UDim2.new(0, 40, 1, 0)
-ButtonY.Position = UDim2.new((sizeY - 1) / 99, -20, 0, 0)
-ButtonY.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ButtonY.Size = UDim2.new(0, 20, 0, 20)
+ButtonY.Position = UDim2.new((sizeY - 1) / 99, -10, 0.5, -10)
+ButtonY.BackgroundColor3 = Color3.fromRGB(230, 230, 235)
 ButtonY.BorderSizePixel = 0
 ButtonY.Text = ''
 ButtonY.Parent = FrameY
 
-Instance.new('UICorner', ButtonY).CornerRadius = UDim.new(0, 6)
+Instance.new('UICorner', ButtonY).CornerRadius = UDim.new(0, 5)
 
 ---------------------------------------------------------
--- Z-AXIS CONTROLLERS
+-- Z-AXIS MODULAR WIDGET
 ---------------------------------------------------------
 local LabelZ = Instance.new('TextLabel')
 LabelZ.Size = UDim2.new(1, -20, 0, 15)
-LabelZ.Position = UDim2.new(0, 10, 0, 155)
+LabelZ.Position = UDim2.new(0, 10, 0, 180)
 LabelZ.BackgroundTransparency = 1
-LabelZ.Text = 'Size Z: ' .. sizeZ
-LabelZ.TextColor3 = Color3.fromRGB(200, 200, 200)
-LabelZ.Font = Enum.Font.Gotham
-LabelZ.TextSize = 14
+LabelZ.Text = 'Depth (Z): ' .. sizeZ
+LabelZ.TextColor3 = Color3.fromRGB(150, 150, 155)
+LabelZ.Font = Enum.Font.GothamMedium
+LabelZ.TextSize = 11
 LabelZ.TextXAlignment = Enum.TextXAlignment.Left
 LabelZ.Parent = MainFrame
 
 local FrameZ = Instance.new('Frame')
-FrameZ.Size = UDim2.new(1, -20, 0, 20)
-FrameZ.Position = UDim2.new(0, 10, 0, 170)
-FrameZ.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FrameZ.Size = UDim2.new(1, -20, 0, 6)
+FrameZ.Position = UDim2.new(0, 10, 0, 200)
+FrameZ.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 FrameZ.BorderSizePixel = 0
 FrameZ.Parent = MainFrame
 
-Instance.new('UICorner', FrameZ).CornerRadius = UDim.new(0, 6)
+Instance.new('UICorner', FrameZ).CornerRadius = UDim.new(0, 3)
 
 local ButtonZ = Instance.new('TextButton')
-ButtonZ.Size = UDim2.new(0, 40, 1, 0)
-ButtonZ.Position = UDim2.new((sizeZ - 1) / 99, -20, 0, 0)
-ButtonZ.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ButtonZ.Size = UDim2.new(0, 20, 0, 20)
+ButtonZ.Position = UDim2.new((sizeZ - 1) / 99, -10, 0.5, -10)
+ButtonZ.BackgroundColor3 = Color3.fromRGB(230, 230, 235)
 ButtonZ.BorderSizePixel = 0
 ButtonZ.Text = ''
 ButtonZ.Parent = FrameZ
 
-Instance.new('UICorner', ButtonZ).CornerRadius = UDim.new(0, 6)
+Instance.new('UICorner', ButtonZ).CornerRadius = UDim.new(0, 5)
 
 ---------------------------------------------------------
--- TRANSPARENCY CONTROLLER WIDGET
+-- TRANSPARENCY MODULAR WIDGET
 ---------------------------------------------------------
 local TransLabel = Instance.new('TextLabel')
 TransLabel.Size = UDim2.new(1, -20, 0, 15)
-TransLabel.Position = UDim2.new(0, 10, 0, 205)
+TransLabel.Position = UDim2.new(0, 10, 0, 230)
 TransLabel.BackgroundTransparency = 1
-TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
-TransLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-TransLabel.Font = Enum.Font.Gotham
-TransLabel.TextSize = 14
+TransLabel.Text = 'Visibility Blockage: ' .. math.round((1 - hitBoxTransparency) * 100) .. '%'
+TransLabel.TextColor3 = Color3.fromRGB(150, 150, 155)
+TransLabel.Font = Enum.Font.GothamMedium
+TransLabel.TextSize = 11
 TransLabel.TextXAlignment = Enum.TextXAlignment.Left
 TransLabel.Parent = MainFrame
 
 local TransSliderFrame = Instance.new('Frame')
-TransSliderFrame.Size = UDim2.new(1, -20, 0, 20)
-TransSliderFrame.Position = UDim2.new(0, 10, 0, 220)
-TransSliderFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TransSliderFrame.Size = UDim2.new(1, -20, 0, 6)
+TransSliderFrame.Position = UDim2.new(0, 10, 0, 250)
+TransSliderFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 TransSliderFrame.BorderSizePixel = 0
 TransSliderFrame.Parent = MainFrame
 
-Instance.new('UICorner', TransSliderFrame).CornerRadius = UDim.new(0, 6)
+Instance.new('UICorner', TransSliderFrame).CornerRadius = UDim.new(0, 3)
 
 local TransSliderButton = Instance.new('TextButton')
-TransSliderButton.Size = UDim2.new(0, 40, 1, 0)
-TransSliderButton.Position = UDim2.new(hitBoxTransparency, -20, 0, 0)
-TransSliderButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+TransSliderButton.Size = UDim2.new(0, 20, 0, 20)
+TransSliderButton.Position = UDim2.new(hitBoxTransparency, -10, 0.5, -10)
+TransSliderButton.BackgroundColor3 = Color3.fromRGB(230, 230, 235)
 TransSliderButton.BorderSizePixel = 0
 TransSliderButton.Text = ''
 TransSliderButton.Parent = TransSliderFrame
 
-Instance.new('UICorner', TransSliderButton).CornerRadius = UDim.new(0, 6)
+Instance.new('UICorner', TransSliderButton).CornerRadius = UDim.new(0, 5)
 
 ---------------------------------------------------------
--- INPUT STATE SEPARATION MANAGEMENT
+-- COOLDOWN INFORMATION LABEL (BOTTOM DECORATIVE LAYER)
+---------------------------------------------------------
+local Footnote = Instance.new('TextLabel')
+Footnote.Size = UDim2.new(1, -20, 0, 20)
+Footnote.Position = UDim2.new(0, 10, 0, 280)
+Footnote.BackgroundTransparency = 1
+Footnote.Text = 'Press [ N ] to hide or restore menu canvas layer'
+Footnote.TextColor3 = Color3.fromRGB(80, 80, 85)
+Footnote.Font = Enum.Font.Gotham
+Footnote.TextSize = 9
+Footnote.TextXAlignment = Enum.TextXAlignment.Center
+Footnote.Parent = MainFrame
+
+---------------------------------------------------------
+-- INPUT HANDLING AND INTERFACE CALCULATIONS
 ---------------------------------------------------------
 local dragX, dragY, dragZ, dragTrans = false, false, false, false
 
@@ -211,41 +234,44 @@ end)
 
 RS.RenderStepped:Connect(function()
     local mouse = Client:GetMouse()
+    local xTrackWidth = FrameX.AbsoluteSize.X
     
     if dragX then
-        local pct = math.clamp(mouse.X - FrameX.AbsolutePosition.X, 0, FrameX.AbsoluteSize.X) / FrameX.AbsoluteSize.X
+        local pct = math.clamp(mouse.X - FrameX.AbsolutePosition.X, 0, xTrackWidth) / xTrackWidth
         sizeX = math.floor(1 + (pct * 99)) 
-        ButtonX.Position = UDim2.new(pct, -20, 0, 0)
-        LabelX.Text = 'Size X: ' .. sizeX
+        ButtonX.Position = UDim2.new(pct, -10, 0.5, -10)
+        LabelX.Text = 'Width (X): ' .. sizeX
     end
     if dragY then
         local pct = math.clamp(mouse.X - FrameY.AbsolutePosition.X, 0, FrameY.AbsoluteSize.X) / FrameY.AbsoluteSize.X
         sizeY = math.floor(1 + (pct * 99)) 
-        ButtonY.Position = UDim2.new(pct, -20, 0, 0)
-        LabelY.Text = 'Size Y: ' .. sizeY
+        ButtonY.Position = UDim2.new(pct, -10, 0.5, -10)
+        LabelY.Text = 'Height (Y): ' .. sizeY
     end
     if dragZ then
         local pct = math.clamp(mouse.X - FrameZ.AbsolutePosition.X, 0, FrameZ.AbsoluteSize.X) / FrameZ.AbsoluteSize.X
         sizeZ = math.floor(1 + (pct * 99)) 
-        ButtonZ.Position = UDim2.new(pct, -20, 0, 0)
-        LabelZ.Text = 'Size Z: ' .. sizeZ
+        ButtonZ.Position = UDim2.new(pct, -10, 0.5, -10)
+        LabelZ.Text = 'Depth (Z): ' .. sizeZ
     end
     if dragTrans then
         local pct = math.clamp(mouse.X - TransSliderFrame.AbsolutePosition.X, 0, TransSliderFrame.AbsoluteSize.X) / TransSliderFrame.AbsoluteSize.X
         hitBoxTransparency = pct
-        TransSliderButton.Position = UDim2.new(pct, -20, 0, 0)
-        TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
+        TransSliderButton.Position = UDim2.new(pct, -10, 0.5, -10)
+        TransLabel.Text = 'Visibility Blockage: ' .. math.round((1 - hitBoxTransparency) * 100) .. '%'
     end
 end)
 
 ToggleButton.MouseButton1Click:Connect(function()
     hitboxEnabled = not hitboxEnabled
     if hitboxEnabled then
-        ToggleButton.Text = 'Hitbox: ON'
+        ToggleButton.Text = 'Status: Active'
         ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
+        AccentLine.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
     else
-        ToggleButton.Text = 'Hitbox: OFF'
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+        ToggleButton.Text = 'Status: Disabled'
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(180, 50, 60) -- Muted red
+        AccentLine.BackgroundColor3 = Color3.fromRGB(180, 50, 60)
     end
 end)
 
@@ -264,15 +290,12 @@ RS.RenderStepped:Connect(function()
                 local maxHealth = Humanoid.MaxHealth
                 local currentHealth = Humanoid.Health
 
-                -- Trigger cooling down if health hits 2 or below
-                if currentHealth <= 2 then
                 if currentHealth <= 2 then
                     coolingDown[Player.UserId] = true
                 elseif currentHealth >= maxHealth then
                     coolingDown[Player.UserId] = nil
                 end
 
-                -- Only expand if above 2 HP AND fully out of the cooldown phase
                 if currentHealth > 2 and not coolingDown[Player.UserId] then
                     if hitboxEnabled then
                         HRP.Size = Vector3.new(sizeX, sizeY, sizeZ)
@@ -301,7 +324,6 @@ RS.RenderStepped:Connect(function()
                         outline.Visible = areLinesVisible
                     end
                 else
-                    -- Hitboxes collapse down to absolute zero (nothing) if 2 HP or below
                     HRP.Size = Vector3.new(0, 0, 0)
                     HRP.Transparency = 1 
 
