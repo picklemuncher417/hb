@@ -11,10 +11,12 @@ local sizeY = 5
 local sizeZ = 5
 local hitBoxTransparency = 1 
 local hitboxEnabled = true
-local superOptimize = false -- Tracks our new performance mode status
+local superOptimize = false
+local potatoGfxEnabled = false -- Tracks our new Lower GFX setting status
 
--- Table to track which players are currently "recovering" up to full health
+-- Tables to track backend state memory data structures safely
 local coolingDown = {}
+local storedMaterials = {} -- Safely remembers original materials when toggled off
 
 local ScreenGui = Instance.new('ScreenGui')
 ScreenGui.Name = 'HitboxExpanderUI'
@@ -22,7 +24,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = Client:WaitForChild('PlayerGui')
 
 local MainFrame = Instance.new('Frame')
-MainFrame.Size = UDim2.new(0, 250, 0, 345) -- Expanded size to hold the optimization row safely
+MainFrame.Size = UDim2.new(0, 250, 0, 380) -- Expanded frame size to secure potato row layout
 MainFrame.Position = UDim2.new(0.5, -125, 0.05, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
@@ -195,12 +197,12 @@ TransSliderButton.Parent = TransSliderFrame
 Instance.new('UICorner', TransSliderButton).CornerRadius = UDim.new(0, 6)
 
 ---------------------------------------------------------
--- SUPER OPTIMIZATION ROW TOGGLE SWITCH (NEW)
+-- SUPER OPTIMIZATION ROW TOGGLE SWITCH
 ---------------------------------------------------------
 local OptButton = Instance.new('TextButton')
 OptButton.Size = UDim2.new(1, -20, 0, 25)
 OptButton.Position = UDim2.new(0, 10, 0, 255)
-OptButton.BackgroundColor3 = Color3.fromRGB(70, 70, 75) -- Starts charcoal dark gray
+OptButton.BackgroundColor3 = Color3.fromRGB(70, 70, 75)
 OptButton.Text = 'Super Optimization: OFF'
 OptButton.TextColor3 = Color3.fromRGB(180, 180, 180)
 OptButton.Font = Enum.Font.GothamBold
@@ -210,6 +212,23 @@ OptButton.Parent = MainFrame
 local OptCorner = Instance.new('UICorner')
 OptCorner.CornerRadius = UDim.new(0, 6)
 OptCorner.Parent = OptButton
+
+---------------------------------------------------------
+-- POTATO GRAPHICS ROW TOGGLE SWITCH (NEW)
+---------------------------------------------------------
+local GfxButton = Instance.new('TextButton')
+GfxButton.Size = UDim2.new(1, -20, 0, 25)
+GfxButton.Position = UDim2.new(0, 10, 0, 290)
+GfxButton.BackgroundColor3 = Color3.fromRGB(70, 70, 75)
+GfxButton.Text = 'Lower GFX: OFF'
+GfxButton.TextColor3 = Color3.fromRGB(180, 180, 180)
+GfxButton.Font = Enum.Font.GothamBold
+GfxButton.TextSize = 11
+GfxButton.Parent = MainFrame
+
+local GfxCorner = Instance.new('UICorner')
+GfxCorner.CornerRadius = UDim.new(0, 6)
+GfxCorner.Parent = GfxButton
 
 ---------------------------------------------------------
 -- INPUT STATE SEPARATION MANAGEMENT
@@ -266,11 +285,12 @@ ToggleButton.MouseButton1Click:Connect(function()
         ToggleButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
     end
 end)
+
 OptButton.MouseButton1Click:Connect(function()
     superOptimize = not superOptimize
     if superOptimize then
         OptButton.Text = 'Super Optimization: ON'
-        OptButton.BackgroundColor3 = Color3.fromRGB(0, 120, 200) -- Clean electric blue theme when active
+        OptButton.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
         OptButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     else
         OptButton.Text = 'Super Optimization: OFF'
@@ -280,20 +300,62 @@ OptButton.MouseButton1Click:Connect(function()
 end)
 
 ---------------------------------------------------------
+-- POTATO MODE EXECUTION FUNCTIONALITY
+---------------------------------------------------------
+GfxButton.MouseButton1Click:Connect(function()
+    potatoGfxEnabled = not potatoGfxEnabled
+    if potatoGfxEnabled then
+        GfxButton.Text = 'Lower GFX: ON'
+        GfxButton.BackgroundColor3 = Color3.fromRGB(200, 120, 0) -- Clean warning orange theme
+        GfxButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        
+        -- Forces client settings graphics down to Level 3
+        pcall(function()
+            local gameSettings = UserSettings():GetService("UserGameSettings")
+            gameSettings.SavedQualityLevel = Enum.SavedQualityLevel.Level3
+        end)
+        
+        -- Wipes materials and turns objects into basic plastic to create proper potato assets
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsDescendantOf(Client.Character) then
+                storedMaterials[obj] = obj.Material -- Remembers old setup
+                obj.Material = Enum.Material.SmoothPlastic -- Forces plastic performance
+            end
+        end
+    else
+        GfxButton.Text = 'Lower GFX: OFF'
+        GfxButton.BackgroundColor3 = Color3.fromRGB(70, 70, 75)
+        GfxButton.TextColor3 = Color3.fromRGB(180, 180, 180)
+        
+        -- Restores game settings level back to default auto scales
+        pcall(function()
+            local gameSettings = UserSettings():GetService("UserGameSettings")
+            gameSettings.SavedQualityLevel = Enum.SavedQualityLevel.Automatic
+        end)
+        
+        -- Re-applies true textures back to normal workspace models
+        for obj, originalMat in pairs(storedMaterials) do
+            if obj and obj.Parent then
+                obj.Material = originalMat
+            end
+        end
+        table.clear(storedMaterials)
+    end
+end)
+
+---------------------------------------------------------
 -- ADVANCED DYNAMIC OPTIMIZATION BACKEND ENGINE
 ---------------------------------------------------------
 task.spawn(function()
-    local baseSleep = 0.03 -- 30Hz target core tick frequency
-    
+    local baseSleep = 0.03
     while true do
         local currentSleep = baseSleep
         local activePlayers = Players:GetPlayers()
         local clientChar = Client.Character
         local clientHRP = clientChar and clientChar:FindFirstChild('HumanoidRootPart')
         
-        -- Adaptive sleeping throttling mechanism to completely rest your device threads if lonely
         if superOptimize and (#activePlayers <= 1 or not clientHRP) then
-            currentSleep = 0.08 -- Drops process clock frequency in empty environments to save power
+            currentSleep = 0.08
         end
         
         task.wait(currentSleep)
@@ -301,30 +363,29 @@ task.spawn(function()
         for i = 1, #activePlayers do
             local Player = activePlayers[i]
             if Player == Client then continue end
-
+            
             local character = Player.Character
             if character then
                 local HRP = character:FindFirstChild('HumanoidRootPart')
                 local Humanoid = character:FindFirstChild('Humanoid')
-
+                
                 if HRP and Humanoid then
-                    -- Distance-culling check mechanism to prevent background engine rendering overhead
                     if superOptimize and clientHRP then
                         local distance = (clientHRP.Position - HRP.Position).Magnitude
-                        if distance > 400 then 
-                            continue -- Ignore entities way out across the map lines entirely
+                        if distance > 400 then
+                            continue
                         end
                     end
-
+                    
                     local maxHealth = Humanoid.MaxHealth
                     local currentHealth = Humanoid.Health
-
+                    
                     if currentHealth <= 2 then
                         coolingDown[Player.UserId] = true
                     elseif currentHealth >= maxHealth then
                         coolingDown[Player.UserId] = nil
                     end
-
+                    
                     if currentHealth > 2 and not coolingDown[Player.UserId] then
                         if hitboxEnabled then
                             HRP.Size = Vector3.new(sizeX, sizeY, sizeZ)
@@ -335,10 +396,10 @@ task.spawn(function()
                         HRP.Transparency = hitBoxTransparency
                         HRP.CanCollide = false
                         HRP.Color = Color3.fromRGB(255, 0, 0)
-
+                        
                         local lineThickness = (1 - hitBoxTransparency) * 0.08
                         local areLinesVisible = hitBoxTransparency < 1
-
+                        
                         local outline = HRP:FindFirstChild('SelectionBox')
                         if not outline then
                             outline = Instance.new('SelectionBox')
@@ -347,13 +408,12 @@ task.spawn(function()
                             outline.Adornee = HRP
                             outline.Color3 = Color3.fromRGB(0, 0, 0)
                         end
-                        
                         outline.LineThickness = lineThickness
                         outline.Visible = areLinesVisible
                     else
                         HRP.Size = Vector3.new(0, 0, 0)
-                        HRP.Transparency = 1 
-
+                        HRP.Transparency = 1
+                        
                         local outline = HRP:FindFirstChild('SelectionBox')
                         if outline then
                             outline:Destroy()
