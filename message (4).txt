@@ -3,6 +3,7 @@ local cloneref = cloneref or function(obj) return obj end
 
 local Players = cloneref(game:GetService('Players'))
 local RS = cloneref(game:GetService('RunService'))
+local Lighting = cloneref(game:GetService('Lighting'))
 local Client = Players.LocalPlayer
 
 -- Default XYZ sizing configuration parameters
@@ -12,11 +13,10 @@ local sizeZ = 5
 local hitBoxTransparency = 1 
 local hitboxEnabled = true
 local superOptimize = false
-local potatoGfxEnabled = false -- Tracks our new Lower GFX setting status
+local potatoGfxEnabled = false 
 
 -- Tables to track backend state memory data structures safely
 local coolingDown = {}
-local storedMaterials = {} -- Safely remembers original materials when toggled off
 
 local ScreenGui = Instance.new('ScreenGui')
 ScreenGui.Name = 'HitboxExpanderUI'
@@ -24,7 +24,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = Client:WaitForChild('PlayerGui')
 
 local MainFrame = Instance.new('Frame')
-MainFrame.Size = UDim2.new(0, 250, 0, 380) -- Expanded frame size to secure potato row layout
+MainFrame.Size = UDim2.new(0, 250, 0, 380) 
 MainFrame.Position = UDim2.new(0.5, -125, 0.05, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
@@ -214,7 +214,7 @@ OptCorner.CornerRadius = UDim.new(0, 6)
 OptCorner.Parent = OptButton
 
 ---------------------------------------------------------
--- POTATO GRAPHICS ROW TOGGLE SWITCH (NEW)
+-- POTATO GRAPHICS ROW TOGGLE SWITCH (STABLE METHOD)
 ---------------------------------------------------------
 local GfxButton = Instance.new('TextButton')
 GfxButton.Size = UDim2.new(1, -20, 0, 25)
@@ -300,46 +300,43 @@ OptButton.MouseButton1Click:Connect(function()
 end)
 
 ---------------------------------------------------------
--- POTATO MODE EXECUTION FUNCTIONALITY
+-- POTATO MODE EXECUTION FUNCTIONALITY (LAG-FREE METHOD)
 ---------------------------------------------------------
 GfxButton.MouseButton1Click:Connect(function()
     potatoGfxEnabled = not potatoGfxEnabled
     if potatoGfxEnabled then
         GfxButton.Text = 'Lower GFX: ON'
-        GfxButton.BackgroundColor3 = Color3.fromRGB(200, 120, 0) -- Clean warning orange theme
+        GfxButton.BackgroundColor3 = Color3.fromRGB(200, 120, 0)
         GfxButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         
-        -- Forces client settings graphics down to Level 3
-        pcall(function()
-            local gameSettings = UserSettings():GetService("UserGameSettings")
-            gameSettings.SavedQualityLevel = Enum.SavedQualityLevel.Level3
-        end)
+        -- Safely bypasses material looping by updating Global Lighting parameters
+        -- This disables heavy visual elements instantly across the map without performance loss
+        Lighting.GlobalShadows = false
+        Lighting.FogStart = 0
+        Lighting.FogEnd = 999999
         
-        -- Wipes materials and turns objects into basic plastic to create proper potato assets
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") and not obj:IsDescendantOf(Client.Character) then
-                storedMaterials[obj] = obj.Material -- Remembers old setup
-                obj.Material = Enum.Material.SmoothPlastic -- Forces plastic performance
-            end
+        local terrain = workspace:FindFirstChildOfClass("Terrain")
+        if terrain then
+            terrain.WaterWaveSize = 0
+            terrain.WaterWaveSpeed = 0
+            terrain.WaterReflectance = 0
+            terrain.WaterTransparency = 0
         end
     else
         GfxButton.Text = 'Lower GFX: OFF'
         GfxButton.BackgroundColor3 = Color3.fromRGB(70, 70, 75)
         GfxButton.TextColor3 = Color3.fromRGB(180, 180, 180)
         
-        -- Restores game settings level back to default auto scales
-        pcall(function()
-            local gameSettings = UserSettings():GetService("UserGameSettings")
-            gameSettings.SavedQualityLevel = Enum.SavedQualityLevel.Automatic
-        end)
+        -- Restores standard Lighting properties back to normal maps
+        Lighting.GlobalShadows = true
         
-        -- Re-applies true textures back to normal workspace models
-        for obj, originalMat in pairs(storedMaterials) do
-            if obj and obj.Parent then
-                obj.Material = originalMat
-            end
+        local terrain = workspace:FindFirstChildOfClass("Terrain")
+        if terrain then
+            terrain.WaterWaveSize = 0.15
+            terrain.WaterWaveSpeed = 10
+            terrain.WaterReflectance = 1
+            terrain.WaterTransparency = 1
         end
-        table.clear(storedMaterials)
     end
 end)
 
