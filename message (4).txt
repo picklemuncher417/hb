@@ -2,7 +2,7 @@ local Players = cloneref(game:GetService('Players'))
 local RS = cloneref(game:GetService('RunService'))
 local Client = Players.LocalPlayer
 
--- Default XYZ sizing configuration parameters (Updated default to 5)
+-- Default XYZ sizing parameters (Now allows values down to 1)
 local sizeX = 5
 local sizeY = 5
 local sizeZ = 5
@@ -15,13 +15,12 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = Client:WaitForChild('PlayerGui')
 
 local MainFrame = Instance.new('Frame')
-MainFrame.Size = UDim2.new(0, 250, 0, 310) -- Dimension anchors extra axis rows safely
+MainFrame.Size = UDim2.new(0, 250, 0, 310) 
 MainFrame.Position = UDim2.new(0.5, -125, 0.05, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
--- Makes the UI movable
 local DragDetector = Instance.new('UIDragDetector')
 DragDetector.Parent = MainFrame
 
@@ -80,7 +79,7 @@ Instance.new('UICorner', FrameX).CornerRadius = UDim.new(0, 6)
 
 local ButtonX = Instance.new('TextButton')
 ButtonX.Size = UDim2.new(0, 40, 1, 0)
-ButtonX.Position = UDim2.new((sizeX - 5) / 95, -20, 0, 0)
+ButtonX.Position = UDim2.new((sizeX - 1) / 99, -20, 0, 0)
 ButtonX.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 ButtonX.BorderSizePixel = 0
 ButtonX.Text = ''
@@ -113,7 +112,7 @@ Instance.new('UICorner', FrameY).CornerRadius = UDim.new(0, 6)
 
 local ButtonY = Instance.new('TextButton')
 ButtonY.Size = UDim2.new(0, 40, 1, 0)
-ButtonY.Position = UDim2.new((sizeY - 5) / 95, -20, 0, 0)
+ButtonY.Position = UDim2.new((sizeY - 1) / 99, -20, 0, 0)
 ButtonY.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 ButtonY.BorderSizePixel = 0
 ButtonY.Text = ''
@@ -146,7 +145,7 @@ Instance.new('UICorner', FrameZ).CornerRadius = UDim.new(0, 6)
 
 local ButtonZ = Instance.new('TextButton')
 ButtonZ.Size = UDim2.new(0, 40, 1, 0)
-ButtonZ.Position = UDim2.new((sizeZ - 5) / 95, -20, 0, 0)
+ButtonZ.Position = UDim2.new((sizeZ - 1) / 99, -20, 0, 0)
 ButtonZ.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 ButtonZ.BorderSizePixel = 0
 ButtonZ.Text = ''
@@ -155,7 +154,7 @@ ButtonZ.Parent = FrameZ
 Instance.new('UICorner', ButtonZ).CornerRadius = UDim.new(0, 6)
 
 ---------------------------------------------------------
--- TRANSPARENCY CONTROLLER WIDGET
+-- TRANSPARENCROLLER WIDGET
 ---------------------------------------------------------
 local TransLabel = Instance.new('TextLabel')
 TransLabel.Size = UDim2.new(1, -20, 0, 15)
@@ -208,19 +207,19 @@ RS.RenderStepped:Connect(function()
     
     if dragX then
         local pct = math.clamp(mouse.X - FrameX.AbsolutePosition.X, 0, FrameX.AbsoluteSize.X) / FrameX.AbsoluteSize.X
-        sizeX = math.floor(5 + (pct * 95))
+        sizeX = math.floor(1 + (pct * 99)) -- Can drop down to a scale of 1
         ButtonX.Position = UDim2.new(pct, -20, 0, 0)
         LabelX.Text = 'Size X: ' .. sizeX
     end
     if dragY then
         local pct = math.clamp(mouse.X - FrameY.AbsolutePosition.X, 0, FrameY.AbsoluteSize.X) / FrameY.AbsoluteSize.X
-        sizeY = math.floor(5 + (pct * 95))
+        sizeY = math.floor(1 + (pct * 99)) -- Can drop down to a scale of 1
         ButtonY.Position = UDim2.new(pct, -20, 0, 0)
         LabelY.Text = 'Size Y: ' .. sizeY
     end
     if dragZ then
         local pct = math.clamp(mouse.X - FrameZ.AbsolutePosition.X, 0, FrameZ.AbsoluteSize.X) / FrameZ.AbsoluteSize.X
-        sizeZ = math.floor(5 + (pct * 95))
+        sizeZ = math.floor(1 + (pct * 99)) -- Can drop down to a scale of 1
         ButtonZ.Position = UDim2.new(pct, -20, 0, 0)
         LabelZ.Text = 'Size Z: ' .. sizeZ
     end
@@ -244,7 +243,7 @@ ToggleButton.MouseButton1Click:Connect(function()
 end)
 
 ---------------------------------------------------------
--- SIMULATION LOOP (With Auto Respawn / Health Detection)
+-- COMPREHENSIVE SIMULATION RUNTIME ENVIRONMENT
 ---------------------------------------------------------
 RS.RenderStepped:Connect(function()
     for _, Player in pairs(Players:GetPlayers()) do
@@ -254,7 +253,6 @@ RS.RenderStepped:Connect(function()
             local HRP = Player.Character.HumanoidRootPart
             local Humanoid = Player.Character:FindFirstChild('Humanoid')
 
-            -- Checks that player is fully alive before making alterations
             if Humanoid and Humanoid.Health > 0 then
                 if hitboxEnabled then
                     HRP.Size = Vector3.new(sizeX, sizeY, sizeZ)
@@ -265,7 +263,6 @@ RS.RenderStepped:Connect(function()
                 HRP.Transparency = hitBoxTransparency
                 HRP.CanCollide = false
                 HRP.Color = Color3.fromRGB(255, 0, 0)
-
                 local lineThickness = (1 - hitBoxTransparency) * 0.08
                 local areLinesVisible = hitBoxTransparency < 1
 
@@ -283,7 +280,6 @@ RS.RenderStepped:Connect(function()
                     outline.Visible = areLinesVisible
                 end
             else
-                -- Instantly wipes alterations if dead to keep simulation clean
                 HRP.Size = Vector3.new(2, 2, 1)
                 HRP.Transparency = 0
 
@@ -296,7 +292,6 @@ RS.RenderStepped:Connect(function()
     end
 end)
 
--- Toggle Menu Visibility (Using the N Key)
 game:GetService('UserInputService').InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.KeyCode == Enum.KeyCode.N then
