@@ -2,9 +2,12 @@ local Players = cloneref(game:GetService('Players'))
 local RS = cloneref(game:GetService('RunService'))
 local Client = Players.LocalPlayer
 
-local size = 30
+-- Default XYZ sizing configuration parameters (Updated default to 5)
+local sizeX = 5
+local sizeY = 5
+local sizeZ = 5
 local hitBoxTransparency = 1 
-local hitboxEnabled = true -- Hitbox state tracking variable
+local hitboxEnabled = true
 
 local ScreenGui = Instance.new('ScreenGui')
 ScreenGui.Name = 'HitboxExpanderUI'
@@ -12,7 +15,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = Client:WaitForChild('PlayerGui')
 
 local MainFrame = Instance.new('Frame')
-MainFrame.Size = UDim2.new(0, 250, 0, 200)
+MainFrame.Size = UDim2.new(0, 250, 0, 310) -- Dimension anchors extra axis rows safely
 MainFrame.Position = UDim2.new(0.5, -125, 0.05, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
@@ -36,12 +39,12 @@ Title.TextSize = 16
 Title.Parent = MainFrame
 
 ---------------------------------------------------------
--- ON/OFF TOGGLE BUTTON
+-- MASTER TOGGLE INTERFACE ELEMENT
 ---------------------------------------------------------
 local ToggleButton = Instance.new('TextButton')
 ToggleButton.Size = UDim2.new(1, -20, 0, 25)
 ToggleButton.Position = UDim2.new(0, 10, 0, 35)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100) -- Green when active
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
 ToggleButton.Text = 'Hitbox: ON'
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.Font = Enum.Font.GothamBold
@@ -53,66 +56,126 @@ ToggleCorner.CornerRadius = UDim.new(0, 6)
 ToggleCorner.Parent = ToggleButton
 
 ---------------------------------------------------------
--- SIZE SLIDER WIDGET
+-- X-AXIS CONTROLLERS
 ---------------------------------------------------------
-local SizeLabel = Instance.new('TextLabel')
-SizeLabel.Size = UDim2.new(1, -20, 0, 20)
-SizeLabel.Position = UDim2.new(0, 10, 0, 65)
-SizeLabel.BackgroundTransparency = 1
-SizeLabel.Text = 'Size: ' .. size
-SizeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-SizeLabel.Font = Enum.Font.Gotham
-SizeLabel.TextSize = 14
-SizeLabel.TextXAlignment = Enum.TextXAlignment.Left
-SizeLabel.Parent = MainFrame
+local LabelX = Instance.new('TextLabel')
+LabelX.Size = UDim2.new(1, -20, 0, 15)
+LabelX.Position = UDim2.new(0, 10, 0, 65)
+LabelX.BackgroundTransparency = 1
+LabelX.Text = 'Size X: ' .. sizeX
+LabelX.TextColor3 = Color3.fromRGB(200, 200, 200)
+LabelX.Font = Enum.Font.Gotham
+LabelX.TextSize = 12
+LabelX.TextXAlignment = Enum.TextXAlignment.Left
+LabelX.Parent = MainFrame
 
-local SliderFrame = Instance.new('Frame')
-SliderFrame.Size = UDim2.new(1, -20, 0, 25)
-SliderFrame.Position = UDim2.new(0, 10, 0, 90)
-SliderFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-SliderFrame.BorderSizePixel = 0
-SliderFrame.Parent = MainFrame
+local FrameX = Instance.new('Frame')
+FrameX.Size = UDim2.new(1, -20, 0, 20)
+FrameX.Position = UDim2.new(0, 10, 0, 80)
+FrameX.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FrameX.BorderSizePixel = 0
+FrameX.Parent = MainFrame
 
-local SliderCorner = Instance.new('UICorner')
-SliderCorner.CornerRadius = UDim.new(0, 6)
-SliderCorner.Parent = SliderFrame
+Instance.new('UICorner', FrameX).CornerRadius = UDim.new(0, 6)
 
-local SliderButton = Instance.new('TextButton')
-SliderButton.Size = UDim2.new(0, 40, 1, 0)
-SliderButton.Position = UDim2.new((size - 5) / 95, -20, 0, 0)
-SliderButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-SliderButton.BorderSizePixel = 0
-SliderButton.Text = ''
-SliderButton.Parent = SliderFrame
+local ButtonX = Instance.new('TextButton')
+ButtonX.Size = UDim2.new(0, 40, 1, 0)
+ButtonX.Position = UDim2.new((sizeX - 5) / 95, -20, 0, 0)
+ButtonX.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ButtonX.BorderSizePixel = 0
+ButtonX.Text = ''
+ButtonX.Parent = FrameX
 
-local ButtonCorner = Instance.new('UICorner')
-ButtonCorner.CornerRadius = UDim.new(0, 6)
-ButtonCorner.Parent = SliderButton
+Instance.new('UICorner', ButtonX).CornerRadius = UDim.new(0, 6)
 
 ---------------------------------------------------------
--- TRANSPARENCY SLIDER WIDGET
+-- Y-AXIS CONTROLLERS
+---------------------------------------------------------
+local LabelY = Instance.new('TextLabel')
+LabelY.Size = UDim2.new(1, -20, 0, 15)
+LabelY.Position = UDim2.new(0, 10, 0, 110)
+LabelY.BackgroundTransparency = 1
+LabelY.Text = 'Size Y: ' .. sizeY
+LabelY.TextColor3 = Color3.fromRGB(200, 200, 200)
+LabelY.Font = Enum.Font.Gotham
+LabelY.TextSize = 12
+LabelY.TextXAlignment = Enum.TextXAlignment.Left
+LabelY.Parent = MainFrame
+
+local FrameY = Instance.new('Frame')
+FrameY.Size = UDim2.new(1, -20, 0, 20)
+FrameY.Position = UDim2.new(0, 10, 0, 125)
+FrameY.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FrameY.BorderSizePixel = 0
+FrameY.Parent = MainFrame
+
+Instance.new('UICorner', FrameY).CornerRadius = UDim.new(0, 6)
+
+local ButtonY = Instance.new('TextButton')
+ButtonY.Size = UDim2.new(0, 40, 1, 0)
+ButtonY.Position = UDim2.new((sizeY - 5) / 95, -20, 0, 0)
+ButtonY.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ButtonY.BorderSizePixel = 0
+ButtonY.Text = ''
+ButtonY.Parent = FrameY
+
+Instance.new('UICorner', ButtonY).CornerRadius = UDim.new(0, 6)
+
+---------------------------------------------------------
+-- Z-AXIS CONTROLLERS
+---------------------------------------------------------
+local LabelZ = Instance.new('TextLabel')
+LabelZ.Size = UDim2.new(1, -20, 0, 15)
+LabelZ.Position = UDim2.new(0, 10, 0, 155)
+LabelZ.BackgroundTransparency = 1
+LabelZ.Text = 'Size Z: ' .. sizeZ
+LabelZ.TextColor3 = Color3.fromRGB(200, 200, 200)
+LabelZ.Font = Enum.Font.Gotham
+LabelZ.TextSize = 12
+LabelZ.TextXAlignment = Enum.TextXAlignment.Left
+LabelZ.Parent = MainFrame
+
+local FrameZ = Instance.new('Frame')
+FrameZ.Size = UDim2.new(1, -20, 0, 20)
+FrameZ.Position = UDim2.new(0, 10, 0, 170)
+FrameZ.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FrameZ.BorderSizePixel = 0
+FrameZ.Parent = MainFrame
+
+Instance.new('UICorner', FrameZ).CornerRadius = UDim.new(0, 6)
+
+local ButtonZ = Instance.new('TextButton')
+ButtonZ.Size = UDim2.new(0, 40, 1, 0)
+ButtonZ.Position = UDim2.new((sizeZ - 5) / 95, -20, 0, 0)
+ButtonZ.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ButtonZ.BorderSizePixel = 0
+ButtonZ.Text = ''
+ButtonZ.Parent = FrameZ
+
+Instance.new('UICorner', ButtonZ).CornerRadius = UDim.new(0, 6)
+
+---------------------------------------------------------
+-- TRANSPARENCY CONTROLLER WIDGET
 ---------------------------------------------------------
 local TransLabel = Instance.new('TextLabel')
-TransLabel.Size = UDim2.new(1, -20, 0, 20)
-TransLabel.Position = UDim2.new(0, 10, 0, 125)
+TransLabel.Size = UDim2.new(1, -20, 0, 15)
+TransLabel.Position = UDim2.new(0, 10, 0, 205)
 TransLabel.BackgroundTransparency = 1
 TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
 TransLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 TransLabel.Font = Enum.Font.Gotham
-TransLabel.TextSize = 14
+TransLabel.TextSize = 12
 TransLabel.TextXAlignment = Enum.TextXAlignment.Left
 TransLabel.Parent = MainFrame
 
 local TransSliderFrame = Instance.new('Frame')
-TransSliderFrame.Size = UDim2.new(1, -20, 0, 25)
-TransSliderFrame.Position = UDim2.new(0, 10, 0, 150)
+TransSliderFrame.Size = UDim2.new(1, -20, 0, 20)
+TransSliderFrame.Position = UDim2.new(0, 10, 0, 220)
 TransSliderFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 TransSliderFrame.BorderSizePixel = 0
 TransSliderFrame.Parent = MainFrame
 
-local TransSliderCorner = Instance.new('UICorner')
-TransSliderCorner.CornerRadius = UDim.new(0, 6)
-TransSliderCorner.Parent = TransSliderFrame
+Instance.new('UICorner', TransSliderFrame).CornerRadius = UDim.new(0, 6)
 
 local TransSliderButton = Instance.new('TextButton')
 TransSliderButton.Size = UDim2.new(0, 40, 1, 0)
@@ -122,90 +185,79 @@ TransSliderButton.BorderSizePixel = 0
 TransSliderButton.Text = ''
 TransSliderButton.Parent = TransSliderFrame
 
-local TransButtonCorner = Instance.new('UICorner')
-TransButtonCorner.CornerRadius = UDim.new(0, 6)
-TransButtonCorner.Parent = TransSliderButton
+Instance.new('UICorner', TransSliderButton).CornerRadius = UDim.new(0, 6)
 
 ---------------------------------------------------------
--- SLIDER LOGIC TRACKING
+-- INPUT STATE SEPARATION MANAGEMENT
 ---------------------------------------------------------
-local draggingSize = false
-local draggingTrans = false
+local dragX, dragY, dragZ, dragTrans = false, false, false, false
 
-SliderButton.MouseButton1Down:Connect(function()
-    draggingSize = true
-end)
-
-TransSliderButton.MouseButton1Down:Connect(function()
-    draggingTrans = true
-end)
+ButtonX.MouseButton1Down:Connect(function() dragX = true end)
+ButtonY.MouseButton1Down:Connect(function() dragY = true end)
+ButtonZ.MouseButton1Down:Connect(function() dragZ = true end)
+TransSliderButton.MouseButton1Down:Connect(function() dragTrans = true end)
 
 game:GetService('UserInputService').InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        draggingSize = false
-        draggingTrans = false
+        dragX, dragY, dragZ, dragTrans = false, false, false, false
     end
 end)
 
 RS.RenderStepped:Connect(function()
     local mouse = Client:GetMouse()
     
-    if draggingSize then
-        local relativeX = math.clamp(
-            mouse.X - SliderFrame.AbsolutePosition.X,
-            0,
-            SliderFrame.AbsoluteSize.X
-        )
-        local percentage = relativeX / SliderFrame.AbsoluteSize.X
-        size = math.floor(5 + (percentage * 95))
-        SliderButton.Position = UDim2.new(percentage, -20, 0, 0)
-        SizeLabel.Text = 'Size: ' .. size
+    if dragX then
+        local pct = math.clamp(mouse.X - FrameX.AbsolutePosition.X, 0, FrameX.AbsoluteSize.X) / FrameX.AbsoluteSize.X
+        sizeX = math.floor(5 + (pct * 95))
+        ButtonX.Position = UDim2.new(pct, -20, 0, 0)
+        LabelX.Text = 'Size X: ' .. sizeX
     end
-    
-    if draggingTrans then
-        local relativeX = math.clamp(
-            mouse.X - TransSliderFrame.AbsolutePosition.X,
-            0,
-            TransSliderFrame.AbsoluteSize.X
-        )
-        local percentage = relativeX / TransSliderFrame.AbsoluteSize.X
-        hitBoxTransparency = percentage
-        TransSliderButton.Position = UDim2.new(percentage, -20, 0, 0)
+    if dragY then
+        local pct = math.clamp(mouse.X - FrameY.AbsolutePosition.X, 0, FrameY.AbsoluteSize.X) / FrameY.AbsoluteSize.X
+        sizeY = math.floor(5 + (pct * 95))
+        ButtonY.Position = UDim2.new(pct, -20, 0, 0)
+        LabelY.Text = 'Size Y: ' .. sizeY
+    end
+    if dragZ then
+        local pct = math.clamp(mouse.X - FrameZ.AbsolutePosition.X, 0, FrameZ.AbsoluteSize.X) / FrameZ.AbsoluteSize.X
+        sizeZ = math.floor(5 + (pct * 95))
+        ButtonZ.Position = UDim2.new(pct, -20, 0, 0)
+        LabelZ.Text = 'Size Z: ' .. sizeZ
+    end
+    if dragTrans then
+        local pct = math.clamp(mouse.X - TransSliderFrame.AbsolutePosition.X, 0, TransSliderFrame.AbsoluteSize.X) / TransSliderFrame.AbsoluteSize.X
+        hitBoxTransparency = pct
+        TransSliderButton.Position = UDim2.new(pct, -20, 0, 0)
         TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
     end
 end)
 
----------------------------------------------------------
--- BUTTON CLICK TOGGLE LOGIC
----------------------------------------------------------
 ToggleButton.MouseButton1Click:Connect(function()
     hitboxEnabled = not hitboxEnabled
     if hitboxEnabled then
         ToggleButton.Text = 'Hitbox: ON'
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100) -- Green
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
     else
         ToggleButton.Text = 'Hitbox: OFF'
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0) -- Red
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
     end
 end)
 
 ---------------------------------------------------------
--- VISUAL UPDATER LOOP
+-- SIMULATION LOOP (With Auto Respawn / Health Detection)
 ---------------------------------------------------------
 RS.RenderStepped:Connect(function()
     for _, Player in pairs(Players:GetPlayers()) do
-        if Player == Client then
-            continue
-        end
+        if Player == Client then continue end
 
         if Player.Character and Player.Character:FindFirstChild('HumanoidRootPart') then
             local HRP = Player.Character.HumanoidRootPart
             local Humanoid = Player.Character:FindFirstChild('Humanoid')
 
+            -- Checks that player is fully alive before making alterations
             if Humanoid and Humanoid.Health > 0 then
-                -- Determine size based on button state, transparency always maps to slider
                 if hitboxEnabled then
-                    HRP.Size = Vector3.new(size, size, size)
+                    HRP.Size = Vector3.new(sizeX, sizeY, sizeZ)
                 else
                     HRP.Size = Vector3.new(2, 2, 1)
                 end
@@ -231,8 +283,9 @@ RS.RenderStepped:Connect(function()
                     outline.Visible = areLinesVisible
                 end
             else
+                -- Instantly wipes alterations if dead to keep simulation clean
                 HRP.Size = Vector3.new(2, 2, 1)
-                HRP.Transparency = 1
+                HRP.Transparency = 0
 
                 local outline = HRP:FindFirstChild('SelectionBox')
                 if outline then
@@ -250,3 +303,4 @@ game:GetService('UserInputService').InputBegan:Connect(function(input, processed
         ScreenGui.Enabled = not ScreenGui.Enabled
     end
 end)
+
