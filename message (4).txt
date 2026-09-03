@@ -2,12 +2,15 @@ local Players = cloneref(game:GetService('Players'))
 local RS = cloneref(game:GetService('RunService'))
 local Client = Players.LocalPlayer
 
--- Default XYZ sizing parameters (Allows values down to 1)
+-- Default XYZ sizing configuration parameters
 local sizeX = 5
 local sizeY = 5
 local sizeZ = 5
 local hitBoxTransparency = 1 
 local hitboxEnabled = true
+
+-- Table to track which players are currently "recovering" up to full health
+local coolingDown = {}
 
 local ScreenGui = Instance.new('ScreenGui')
 ScreenGui.Name = 'HitboxExpanderUI'
@@ -21,6 +24,7 @@ MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
+-- Makes the UI movable
 local DragDetector = Instance.new('UIDragDetector')
 DragDetector.Parent = MainFrame
 
@@ -64,7 +68,7 @@ LabelX.BackgroundTransparency = 1
 LabelX.Text = 'Size X: ' .. sizeX
 LabelX.TextColor3 = Color3.fromRGB(200, 200, 200)
 LabelX.Font = Enum.Font.Gotham
-LabelX.TextSize = 12
+LabelX.TextSize = 14
 LabelX.TextXAlignment = Enum.TextXAlignment.Left
 LabelX.Parent = MainFrame
 
@@ -97,7 +101,7 @@ LabelY.BackgroundTransparency = 1
 LabelY.Text = 'Size Y: ' .. sizeY
 LabelY.TextColor3 = Color3.fromRGB(200, 200, 200)
 LabelY.Font = Enum.Font.Gotham
-LabelY.TextSize = 12
+LabelY.TextSize = 14
 LabelY.TextXAlignment = Enum.TextXAlignment.Left
 LabelY.Parent = MainFrame
 
@@ -130,7 +134,7 @@ LabelZ.BackgroundTransparency = 1
 LabelZ.Text = 'Size Z: ' .. sizeZ
 LabelZ.TextColor3 = Color3.fromRGB(200, 200, 200)
 LabelZ.Font = Enum.Font.Gotham
-LabelZ.TextSize = 12
+LabelZ.TextSize = 14
 LabelZ.TextXAlignment = Enum.TextXAlignment.Left
 LabelZ.Parent = MainFrame
 
@@ -163,7 +167,7 @@ TransLabel.BackgroundTransparency = 1
 TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
 TransLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 TransLabel.Font = Enum.Font.Gotham
-TransLabel.TextSize = 12
+TransLabel.TextSize = 14
 TransLabel.TextXAlignment = Enum.TextXAlignment.Left
 TransLabel.Parent = MainFrame
 
@@ -253,8 +257,19 @@ RS.RenderStepped:Connect(function()
             local HRP = Player.Character.HumanoidRootPart
             local Humanoid = Player.Character:FindFirstChild('Humanoid')
 
-            -- Check if player is alive and above the 2 HP minimum threshold
-            if Humanoid and Humanoid.Health > 2 then
+            if Humanoid then
+                local maxHealth = Humanoid.MaxHealth
+                local currentHealth = Humanoid.Health
+
+                -- Trigger cooling down if health hits 2 or below
+                if currentHealth <= 2 then
+                    coolingDown[Player.UserId] = true
+                elseif currentHealth >= maxHealth then
+                coolingDown[Player.UserId] = nil
+            end
+
+            -- Only expand if above 2 HP AND fully out of the cooldown phase
+            if currentHealth > 2 and not coolingDown[Player.UserId] then
                 if hitboxEnabled then
                     HRP.Size = Vector3.new(sizeX, sizeY, sizeZ)
                 else
@@ -264,6 +279,7 @@ RS.RenderStepped:Connect(function()
                 HRP.Transparency = hitBoxTransparency
                 HRP.CanCollide = false
                 HRP.Color = Color3.fromRGB(255, 0, 0)
+
                 local lineThickness = (1 - hitBoxTransparency) * 0.08
                 local areLinesVisible = hitBoxTransparency < 1
 
@@ -281,9 +297,9 @@ RS.RenderStepped:Connect(function()
                     outline.Visible = areLinesVisible
                 end
             else
-                -- Hitboxes automatically clear if they drop below 2 HP
-                HRP.Size = Vector3.new(2, 2, 1)
-                HRP.Transparency = 0
+                -- Hitboxes collapse down to absolute zero (nothing) if 2 HP or below
+                HRP.Size = Vector3.new(0, 0, 0)
+                HRP.Transparency = 1 
 
                 local outline = HRP:FindFirstChild('SelectionBox')
                 if outline then
