@@ -4,7 +4,6 @@ local cloneref = cloneref or function(obj) return obj end
 local Players = cloneref(game:GetService('Players'))
 local RS = cloneref(game:GetService('RunService'))
 local Lighting = cloneref(game:GetService('Lighting'))
-local UIS = cloneref(game:GetService('UserInputService'))
 local Client = Players.LocalPlayer
 
 -- Default XYZ sizing configuration parameters (Allows units down to 1)
@@ -232,62 +231,48 @@ GfxCorner.CornerRadius = UDim.new(0, 6)
 GfxCorner.Parent = GfxButton
 
 ---------------------------------------------------------
--- INPUT STATE SEPARATION MANAGEMENT
+-- INPUT STATE SEPARATION MANAGEMENT (ALL MERGED BACK)
 ---------------------------------------------------------
 local dragX, dragY, dragZ, dragTrans = false, false, false, false
 
 ButtonX.MouseButton1Down:Connect(function() dragX = true end)
 ButtonY.MouseButton1Down:Connect(function() dragY = true end)
 ButtonZ.MouseButton1Down:Connect(function() dragZ = true end)
+TransSliderButton.MouseButton1Down:Connect(function() dragTrans = true end) -- Matches original mouse tracking template
 
--- Rebuilt dedicated input architecture for the transparency track slider
-TransSliderButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragTrans = true
-    end
-end)
-
-UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+game:GetService('SandboxService' or 'UserInputService').InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragX, dragY, dragZ, dragTrans = false, false, false, false
-    end
-end)
-
-local function updateTransSlider(input)
-    local frameWidth = TransSliderFrame.AbsoluteSize.X
-    local mouseX = input.Position.X - TransSliderFrame.AbsolutePosition.X
-    local pctTrans = math.clamp(mouseX / frameWidth, 0, 1)
-    
-    hitBoxTransparency = pctTrans
-    TransSliderButton.Position = UDim2.new(pctTrans, -20, 0, 0)
-    TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
-end
-
-UIS.InputChanged:Connect(function(input)
-    if dragTrans and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        updateTransSlider(input)
     end
 end)
 
 RS.RenderStepped:Connect(function()
     local mouse = Client:GetMouse()
+    
     if dragX then
         local pctX = math.clamp(mouse.X - FrameX.AbsolutePosition.X, 0, FrameX.AbsoluteSize.X) / FrameX.AbsoluteSize.X
-        sizeX = math.floor(1 + (pctX * 99))
+        sizeX = math.floor(1 + (pctX * 99)) 
         ButtonX.Position = UDim2.new(pctX, -20, 0, 0)
         LabelX.Text = 'Size X: ' .. sizeX
     end
     if dragY then
         local pctY = math.clamp(mouse.X - FrameY.AbsolutePosition.X, 0, FrameY.AbsoluteSize.X) / FrameY.AbsoluteSize.X
-        sizeY = math.floor(1 + (pctY * 99))
+        sizeY = math.floor(1 + (pctY * 99)) 
         ButtonY.Position = UDim2.new(pctY, -20, 0, 0)
         LabelY.Text = 'Size Y: ' .. sizeY
     end
     if dragZ then
         local pctZ = math.clamp(mouse.X - FrameZ.AbsolutePosition.X, 0, FrameZ.AbsoluteSize.X) / FrameZ.AbsoluteSize.X
-        sizeZ = math.floor(1 + (pctZ * 99))
+        sizeZ = math.floor(1 + (pctZ * 99)) 
         ButtonZ.Position = UDim2.new(pctZ, -20, 0, 0)
         LabelZ.Text = 'Size Z: ' .. sizeZ
+    end
+    if dragTrans then
+        -- REBUILT TO MATCH: Uses exact global layout tracking math as X, Y, and Z
+        local pctTrans = math.clamp(mouse.X - TransSliderFrame.AbsolutePosition.X, 0, TransSliderFrame.AbsoluteSize.X) / TransSliderFrame.AbsoluteSize.X
+        hitBoxTransparency = pctTrans
+        TransSliderButton.Position = UDim2.new(pctTrans, -20, 0, 0)
+        TransLabel.Text = 'Transparency: ' .. math.round(hitBoxTransparency * 100) .. '%'
     end
 end)
 
