@@ -1,4 +1,4 @@
--- Safe Environment Fallback Check (Prevents Line 1 Null Execution Crashes)
+-- Safe Environment Fallback Check (Fixes the line 1 nil crash)
 local cloneref = cloneref or function(obj) return obj end
 
 local Players = cloneref(game:GetService('Players'))
@@ -267,7 +267,6 @@ end
 RS.RenderStepped:Connect(function()
     local mouse = Client:GetMouse()
     
-    if dragX then
     if dragX then
         local pctX = math.clamp(mouse.X - FrameX.AbsolutePosition.X, 0, FrameX.AbsoluteSize.X) / FrameX.AbsoluteSize.X
         sizeX = math.floor(1 + (pctX * 99))
